@@ -454,7 +454,16 @@ export const SessionsAPI = {
 // Define a type that matches backend Image model
 type ImageMeta = {
   id: string;
-  // Add other fields if backend exposes them
+  // alternative names the backend might return
+  image_id?: string;
+  imageId?: string;
+  // Add any other fields your backend exposes in the Image model:
+  filename?: string;
+  file_path?: string;
+  content_type?: string;
+  // owner and timestamps
+  owner_id?: string;
+  created_at?: string;
 };
 
 // ---------- Images ----------
@@ -464,6 +473,14 @@ export const ImagesAPI = {
   },
   getLatestForSession(sessionId: string): Promise<ImageMeta> {
     return request<ImageMeta>(`/api/sessions/${encodeURIComponent(sessionId)}/images/latest`, "GET");
+  },
+  /**
+   * Fetch raw image file for an image id and return a Blob.
+   * Note: this performs an authenticated request so callers can create an object URL for <img>.
+   */
+  async getFile(id: string): Promise<Blob> {
+    // request wrapper will return a Blob for non-JSON responses
+    return await request<Blob>(`/api/images/${encodeURIComponent(id)}/file`, "GET");
   },
 };
 
@@ -476,8 +493,20 @@ export const MicroscopeAPI = {
       { command, params }
     );
   },
-  capture(microscopeId: string): Promise<ImageMeta> {
-    return request<ImageMeta>(`/api/microscope/${encodeURIComponent(microscopeId)}/capture`, "POST");
+  /**
+   * Capture an image for the given microscope. The backend requires a session_id
+   * so callers should supply it in the payload. The payload shape mirrors the
+   * backend `CaptureRequest` (session_id required, other fields optional).
+   */
+  capture(
+    microscopeId: string,
+    payload: { session_id: string; auto_focus?: boolean; quality?: string; format?: string }
+  ): Promise<ImageMeta> {
+    return request<ImageMeta>(
+      `/api/microscope/${encodeURIComponent(microscopeId)}/capture`,
+      "POST",
+      payload
+    );
   },
   status(microscopeId: string): Promise<any> {
     return request<any>(`/api/microscope/${encodeURIComponent(microscopeId)}/status`, "GET");
