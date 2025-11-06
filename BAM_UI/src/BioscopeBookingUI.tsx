@@ -16,6 +16,7 @@ import BookingSchedule from "@components/booking/BookingSchedule";
 import ApprovalQueue from "@components/teacher/ApprovalQueue";
 import DayAtAGlance from "@components/teacher/DayAtAGlance";
 import AnalyticsDashboard from "@components/dashboard/AnalyticsDashboard";
+import StudentView from "@components/microscope/StudentView";
 import { ApiError, BookingsAPI } from "@/services/apiClient";
 import { useAuthContext } from "@context/auth-context";
 import LogoutButton from "./LoginOut/LogoutButton";
@@ -293,39 +294,52 @@ export default function BioscopeBookingUI() {
           </TabsList>
 
           <TabsContent value="student" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <BookingCalendar
-                openSlots={openSlots}
-                slotMinutes={SLOT_MINUTES}
-                selectedSlot={draft.slot}
-                onSelectSlot={(slotKey) => setDraft((d) => ({ ...d, slot: slotKey }))}
-                fmtTime={fmtTime}
-              />
-              <BookingForm
-                draft={draft}
-                setDraft={setDraft}
-                isGroup={isGroup}
-                setIsGroup={setIsGroup}
-                onSubmit={submitBooking}
-                fmtTime={fmtTime}
-              />
-            </div>
+            <Tabs defaultValue="bookings" className="space-y-4">
+              <TabsList className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-2xl w-[360px]">
+                <TabsTrigger value="bookings" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow">Bookings</TabsTrigger>
+                <TabsTrigger value="microscope" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow">Microscope</TabsTrigger>
+              </TabsList>
 
-            <BookingSchedule
-              title={`Schedule for ${selectedDate} · ${BIOSCOPES.find(b => b.id === selectedBioscope)?.name ?? ""}`}
-              bookings={dayBookings
-                .filter((b) => (b.status === "approved" && filters.showApproved) || (b.status === "pending" && filters.showPending))
-                .sort((a, b) => a.slotStart - b.slotStart)}
-              fmtTime={fmtTime}
-            />
+              <TabsContent value="bookings" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <BookingCalendar
+                    openSlots={openSlots}
+                    slotMinutes={SLOT_MINUTES}
+                    selectedSlot={draft.slot}
+                    onSelectSlot={(slotKey) => setDraft((d) => ({ ...d, slot: slotKey }))}
+                    fmtTime={fmtTime}
+                  />
+                  <BookingForm
+                    draft={draft}
+                    setDraft={setDraft}
+                    isGroup={isGroup}
+                    setIsGroup={setIsGroup}
+                    onSubmit={submitBooking}
+                    fmtTime={fmtTime}
+                  />
+                </div>
 
-            <BookingList
-              title="My requests"
-              bookings={[...myBookings].sort((a, b) => a.date.localeCompare(b.date) || a.slotStart - b.slotStart)}
-              bioscopes={BIOSCOPES}
-              onCancel={removeBooking}
-              fmtTime={fmtTime}
-            />
+                <BookingSchedule
+                  title={`Schedule for ${selectedDate} · ${BIOSCOPES.find(b => b.id === selectedBioscope)?.name ?? ""}`}
+                  bookings={dayBookings
+                    .filter((b) => (b.status === "approved" && filters.showApproved) || (b.status === "pending" && filters.showPending))
+                    .sort((a, b) => a.slotStart - b.slotStart)}
+                  fmtTime={fmtTime}
+                />
+
+                <BookingList
+                  title="My requests"
+                  bookings={[...myBookings].sort((a, b) => a.date.localeCompare(b.date) || a.slotStart - b.slotStart)}
+                  bioscopes={BIOSCOPES}
+                  onCancel={removeBooking}
+                  fmtTime={fmtTime}
+                />
+              </TabsContent>
+
+              <TabsContent value="microscope" className="space-y-6">
+                <StudentView selectedBioscope={selectedBioscope} onSelectBioscope={(id: string) => setSelectedBioscope(id)} />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="teacher" className="space-y-6">
